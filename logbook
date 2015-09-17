@@ -1,0 +1,69 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use Getopt::Long;
+use vars qw/$debug $help $histCount $comment @histEntry $globalLog/;
+BEGIN{
+	$histCount = 1;
+	GetOptions(
+		'd'	=> \$debug,
+		'h'	=> \$help,
+		'n=i'	=> \$histCount,
+		'e=s'	=> \@histEntry,
+		'g'	=> \$globalLog
+	);
+	
+	@histEntry = split(/,/, join(",", @histEntry));
+	$comment = join(" ", @ARGV);
+	@ARGV = ();
+}
+
+my $globalLogbook = '/home/$ENV{USER}/logbook.txt';
+my $localReadme = "$ENV{PWD}/commandLog.txt";
+my $logbook = $globalLog ? $globalLogbook : $localReadme;
+
+help() if $help;
+
+my %entries = map {$_,1} @histEntry;
+
+my @hist;
+while(<>){
+	s/^\s*([0-9]+)\s*//;
+	next unless $1;
+	if(@histEntry){
+		push(@hist, $_) if exists($entries{$1});
+	}
+	else{
+		push(@hist, $_);
+	}
+}
+
+my $time = localtime();
+
+open(BOOK, ">>$logbook") or die "can't open $logbook for appending : $!";
+print BOOK "#$time $ENV{PWD}\n#$comment\n";
+if(@histEntry){
+	print BOOK @hist;
+}
+else{
+	print BOOK @hist[-($histCount + 1) .. -2];
+}
+print BOOK "\n";
+close BOOK;
+
+sub help{
+	my ($prog) = $0 =~ /([^\/]+)$/;
+	print <<EOF;
+$prog [-e <int> |-n <int>] [-g <string>] "comment"
+   -h help
+   -e history entry number (or csv list of numbers) to enter
+   -n number of entries backwards to enter (e.g. '5' would enter the last five commands into the logbook)
+   -g write to global logbook (default = $globalLogbook)
+
+Appends a log entry into $localReadme (or the global logbook, if -g is set)
+If the -e or -n option is ommitted, only the previous history entry entered into the logbook.
+
+EOF
+	print "\n@_\n" if @_;
+	exit;
+}

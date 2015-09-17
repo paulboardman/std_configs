@@ -1,0 +1,130 @@
+# .bashrc
+
+# User specific aliases and functions
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+PS1="[\u@\h \W]\\$ "
+
+
+# set the umask so that group can read/write my files
+umask u=rwx,g=rwx,o=rx
+
+#################
+# Global variable defs
+#################
+
+# ~/.local/bin is hte default installation dir for non-sudo python scripts
+# add a few personal path defs
+export PATH=/usr/local/bin:~/bin/db:~/.local/bin:/Users/paul/Library/Python/2.7/bin:$PATH
+export EDITOR=vim
+export BINDIR=/Users/paul/bin
+export PYTHONPATH=/usr/local/lib/python2.7/site-packages
+export PAGER=less
+export LESS="-mN" # add line numbers and progress
+export DYLD_LIBRARY_PATH=/Library/Java/JavaVirtualMachines/jdk1.7.0_40.jdk/Contents/Home/jre/lib/server/
+export LD_LIBRARY_PATH=/Library/Java/JavaVirtualMachines/jdk1.7.0_40.jdk/Contents/Home/jre/lib/server/
+
+#################
+# History
+#################
+
+# size per session
+export HISTSIZE=5000
+# size across sessions
+export HISTFILESIZE=100000
+
+# ignore duplicates
+export HISTCONTROL=ignoredups
+
+# ignore common/boring commands
+export HISTIGNORE="pwd:ls:l:la:lt:lth:top:df:df -h:knime:bg:cd:date:cd ..:xenstat.sh:jobs:R:lht"
+
+# append the history from each shell to
+# the global history file (i.e. keep all my history!)
+shopt -s histappend
+
+#################
+# some basic aliases for dir listings and the like
+#################
+
+alias ls='ls -F' # display '/' for dir listings
+alias l='ls -lh' # long form, human readable file sizes
+alias lt='ls -lth' # sort by time modified
+alias la='ls -lah' # show hidden files (long form)
+alias lS='ls -lSh' # sort by size (long form)
+alias df='df -h' # show disk usage (human readable size)
+alias pt='ps axjf' # view threads
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias bsrc='open ~/.bashrc;source ~/.bashrc' # quickly hack your .bsrc
+alias du='du -h' # human readable disk usage
+alias du1='du -d 1'
+
+alias ssh='ssh -o StrictHostKeyChecking=no'
+alias rsync='rsync --exclude-from /Users/paul/rsync.excludes'
+
+###############
+# Mac 'open' aliaes
+##############
+alias excel='open -a /Applications/Microsoft\ Office\ 2011/Microsoft\ Excel.app'
+alias ot='open -a /Applications/TextWrangler.app'
+alias os='open -a /Applications/Sublime\ Text\ 2.app'
+
+#################
+# a few "I type this too often so make an alias" aliases
+#################
+
+alias perlt='perl -F"\t" -lane'
+alias perlc='perl -F"," -lane'
+alias hist='history | grep -i'
+alias psg='ps -ef | head -1;ps -ef | grep'
+alias src="source $HOME/.bashrc"
+alias Rc='R --vanilla --slave'
+alias sr='screen -d -r'
+alias f="find . -name $1"
+alias sus='sort | uniq -c | sort -n -r'
+
+#################
+# personal loging aliases
+#################
+alias log="history | $BINDIR/logbook"
+
+
+#################
+# some personal functions
+# these could/should be promoted to scripts in /nmr8/projects/apps/bin
+#################
+function sc() { screen -S "$1" -t "$1" ; }
+function lth() { ls -lth "$@" | head; }
+function ltn() { ls -lth "$1" | head -n $2; }
+function ldu() { du -hs "$@" | grep [0-9][GM]; }
+function lsd() { l "$@" | grep "/";}
+function pc()  { perl -F"\t" -lane "\$h{$1}++ if $2;END{print \"\$_\t\$h{\$_}\" for sort { \$h{\$b} <=> \$h{\$a} } keys %h}" $3; }
+function exd() { perl -lne "next if /^\s+at /;\$h{\$1}++ if /(\S+(Exception|Warning|Error):?.*)$/;END{print \"\$_\t\$h{\$_}\" for sort {\$h{\$b} <=> \$h{\$a}} keys %h}" "$@"; }
+function rcsum() { R --vanilla --slave <<< "d=read.csv('$1', header=F);summary(d);"; }
+function rtsum() { R --vanilla --slave <<< "d=read.delim('$1', header=F);summary(d);"; }
+
+# view the column headers for a tab delimited file
+function headers() { head -n 1 $1 | perl -F"\t" -lane 'print $n++,"\t$_" for @F'; }
+
+# This bash function lets you emulate make by checking to see if dependencies of a file have changed (are more recently timestamped).
+function mk {
+    local new_file=$1
+    shift
+    if [[ -e "$new_file" ]]; then
+        for var in "$@"
+        do
+            if [[ "$var" -nt "$new_file" ]]; then
+                return 0
+            fi
+        done
+        return 1
+    else
+        return 0
+    fi
+}
