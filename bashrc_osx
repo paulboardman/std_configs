@@ -86,6 +86,7 @@ alias psg='ps -ef | head -1;ps -ef | grep'
 alias src="source $HOME/.bashrc"
 alias Rc='R --vanilla --slave'
 alias sr='screen -d -r'
+alias sl='screen -ls'
 alias f="find . -name $1"
 alias sus='sort | uniq -c | sort -n -r'
 
